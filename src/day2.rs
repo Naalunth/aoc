@@ -34,6 +34,8 @@ pub fn p1(input: &GeneratorOut) -> u32 {
 
 #[aoc(day2, part2)]
 pub fn p2(input: &GeneratorOut) -> String {
+	// sorting is a kinda ok-ish heuristic, as the pair will have a
+	// good chance of landing next to each other
 	let mut sorted = input.to_vec();
 	sorted.sort();
 	let (a, b) = (0..sorted.len())
