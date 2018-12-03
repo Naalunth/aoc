@@ -12,7 +12,8 @@ To use `cargo-aoc`, first install it with `cargo install cargo-aoc`. Then you ca
 
 These benchmarks were run on a Ryzen 7 1700X.
 
-| Day | Part 1    | Part 2    | Notes                                                                                  |
+| Day |    Part 1 |    Part 2 | Notes                                                                                  |
 |----:|----------:|----------:|:---------------------------------------------------------------------------------------|
-| 1   | 140.54 ns | 287.16 µs |                                                                                        |
-| 2   | 368.29 µs | 64.995 µs | Part 2 uses an inconsistent optimization by sorting the lines of IDs before comparison |
+|   1 | 140.54 ns | 287.16 µs |                                                                                        |
+|   2 | 368.29 µs | 64.995 µs | Part 2 uses an inconsistent optimization by sorting the lines of IDs before comparison |
+|   3 | 8.9421 ms | 8.0919 ms |                                                                                        |

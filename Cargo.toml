@@ -10,3 +10,10 @@ bench = false
 aoc-runner = "0.1.0"
 aoc-runner-derive = "0.1.3"
 smallvec = "0.6.7"
+
+[dependencies.nom]
+version = "4.1.1"
+features = []
+
+[dev-dependencies]
+proptest = "0.8.7"

@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+xs 2978410697 2654792176 1307406779 3256901502 # shrinks to (a, b) = (Bounds { left: 0, top: 0, width: 1, height: 1 }, Bounds { left: 0, top: 0, width: 1, height: 1 })
