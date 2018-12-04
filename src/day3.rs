@@ -250,7 +250,7 @@ impl<T: fmt::Display> fmt::Display for QuadTree<T> {
 			height: size
 		};
 
-		let strings = walk_node(&self.root, &root_bounds, self.levels);
+		let strings = walk_node(&self.root, &root_bounds, self.levels - 1);
 		for s in strings {
 			write!(f, "{}\n", s)?;
 		}
@@ -337,16 +337,20 @@ impl AreaBounds for Claim {
 
 #[aoc(day3, part1)]
 pub fn part_1(input: &GeneratorOut) -> u32 {
-	let mut qt = QuadTree::new(10, 0u8);
+	let mut qt = QuadTree::new(16, 0u8);
 	for claim in input {
 		qt.map_and_merge(claim, |count| u8::min(count + 1, 2));
 	}
+	/*
+	let mut file = std::fs:File::create("tree.txt").unwrap();
+	write!(file, "{}", qt);
+	*/
 	qt.area_if(|count| *count == 2)
 }
 
 #[aoc(day3, part2)]
 pub fn part_2(input: &GeneratorOut) -> u32 {
-	let mut qt = QuadTree::new(10, 0u8);
+	let mut qt = QuadTree::new(16, 0u8);
 	for claim in input {
 		qt.map_and_merge(claim, |count| u8::min(count + 1, 2));
 	}
