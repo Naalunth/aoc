@@ -8,6 +8,7 @@ extern crate nom;
 #[macro_use]
 extern crate proptest;
 extern crate chrono;
+extern crate rayon;
 
 pub mod day1;
 pub mod day2;

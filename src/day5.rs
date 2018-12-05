@@ -1,3 +1,5 @@
+use rayon::prelude::*;
+
 fn opposite_units(a: u8, b: u8) -> bool {
 	if a.is_ascii_lowercase() {
 		a.to_ascii_uppercase() == b
@@ -30,20 +32,7 @@ pub fn part_1(input: &[u8]) -> usize {
 #[aoc(day5, part2)]
 pub fn part_2(input: &[u8]) -> usize {
 	let trimmed = &input[0..input.len()-1];
-	(b'A'..=b'Z')
+	(b'A'..(b'Z'+1)).into_par_iter()
 		.map(|deletion| collapse_length(trimmed.iter().filter(|u| u.eq_ignore_ascii_case(&deletion))))
 		.min().unwrap()
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	proptest! {
-		#[test]
-		fn should_be_opposites(s in "[a-z]") {
-			let c = s.as_bytes()[0];
-			prop_assert!(opposite_units(c, c.to_ascii_uppercase()));
-		}
-	}
 }
