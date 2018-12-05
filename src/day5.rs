@@ -6,7 +6,10 @@ fn opposite_units(a: u8, b: u8) -> bool {
 	}
 }
 
-fn collapse_length(polymer: &[u8]) -> usize {
+fn collapse_length<'a, I>(polymer: I) -> usize
+where
+	I: Iterator<Item = &'a u8>
+{
 	let mut stack = Vec::new();
 	for unit in polymer {
 		if stack.last().map_or(false, |last| opposite_units(*last, *unit)) {
@@ -20,19 +23,16 @@ fn collapse_length(polymer: &[u8]) -> usize {
 
 #[aoc(day5, part1)]
 pub fn part_1(input: &[u8]) -> usize {
-	let copy = input.iter().filter(|c| u8::is_ascii_alphabetic(c)).cloned().collect::<Vec<_>>();
-	collapse_length(&copy)
+	let trimmed = &input[0..input.len()-1];
+	collapse_length(trimmed.iter())
 }
 
 #[aoc(day5, part2)]
 pub fn part_2(input: &[u8]) -> usize {
-	(b'A'..=b'Z').map(|deletion| {
-		let copy = input.iter()
-			.filter(|c| c.is_ascii_alphabetic() && !c.eq_ignore_ascii_case(&deletion))
-			.cloned()
-			.collect::<Vec<_>>();
-		collapse_length(&copy)
-	}).min().unwrap()
+	let trimmed = &input[0..input.len()-1];
+	(b'A'..=b'Z')
+		.map(|deletion| collapse_length(trimmed.iter().filter(|u| u.eq_ignore_ascii_case(&deletion))))
+		.min().unwrap()
 }
 
 #[cfg(test)]
