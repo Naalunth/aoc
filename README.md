@@ -17,5 +17,5 @@ These benchmarks were run on a Ryzen 7 1700X.
 |   1 | 140.54 ns | 287.16 µs |                                                                                        |
 |   2 | 368.29 µs | 64.995 µs | Part 2 uses an inconsistent optimization by sorting the lines of IDs before comparison |
 |   3 | 8.9421 ms | 8.0919 ms |                                                                                        |
-|   4 | 95.937 us | 96.591 us |                                                                                        |
-|   5 | 369.81 us | 213.95 us | Part 2 uses parallelization with rayon                                                 |
+|   4 | 95.937 µs | 96.591 µs |                                                                                        |
+|   5 | 369.81 µs | 213.95 µs | Part 2 uses parallelization with rayon                                                 |
