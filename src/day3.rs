@@ -1,7 +1,6 @@
 type GeneratorOut = Vec<Claim>;
 
 use nom::types::CompleteStr;
-use std::fmt;
 
 #[derive(Debug)]
 pub struct Claim {
@@ -193,71 +192,6 @@ impl<T> QuadTree<T> {
 	}
 }
 
-impl<T: fmt::Display> fmt::Display for QuadTree<T> {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		use self::Node::*;
-		use std::fmt::Write;
-		let size = 1 << self.levels;
-
-		fn walk_node<T: fmt::Display>(node: &Node<T>, own_bounds: &Bounds, level: u32) -> Vec<String> {
-			match node {
-				Data(data) => {
-					let mut formatted = String::new();
-					write!(&mut formatted, "{}", data).unwrap();
-					formatted.lines().map(|l| l.to_owned()).collect()
-				},
-				Subdivision(nodes) => {
-					let mut cells = nodes.iter()
-						.zip(&own_bounds.quadrants())
-						.map(|(n, q)| walk_node(n, q, level - 1))
-						.collect::<Vec<_>>();
-					/*
-					let biggest_cell_dim = cells.iter()
-						.map(|c| usize::max(c.len(), c.iter()
-							.map(|s| s.chars().count())
-							.max().unwrap()
-						))
-						.max().unwrap();
-					*/
-					let biggest_cell_dim = (2 << level) - 1;
-					for cell in &mut cells {
-						for line in cell.iter_mut() {
-							for _ in 0..(biggest_cell_dim - line.chars().count()) {
-								line.push(' ');
-							}
-						}
-						for _ in 0..(biggest_cell_dim - cell.len()) {
-							cell.push(std::iter::repeat(' ').take(biggest_cell_dim).collect());
-						}
-					}
-					cells[0].iter()
-						.zip(&cells[1])
-						.map(|(nw, ne)| format!("{}│{}", nw, ne))
-						.chain(std::iter::once(format!("{0}┼{0}", std::iter::repeat('─').take(biggest_cell_dim).collect::<String>())))
-						.chain(cells[2].iter()
-							.zip(&cells[3])
-							.map(|(nw, ne)| format!("{}│{}", nw, ne))
-						)
-						.collect()
-				}
-			}
-		}
-
-		let root_bounds = Bounds {
-			left: 0,
-			top: 0,
-			width: size,
-			height: size
-		};
-
-		let strings = walk_node(&self.root, &root_bounds, self.levels - 1);
-		for s in strings {
-			write!(f, "{}\n", s)?;
-		}
-		Ok(())
-	}
-}
-
 impl<T> Node<T> {
 	fn split(&mut self) where T: Clone {
 		use self::Node::*;
@@ -337,20 +271,16 @@ impl AreaBounds for Claim {
 
 #[aoc(day3, part1)]
 pub fn part_1(input: &GeneratorOut) -> u32 {
-	let mut qt = QuadTree::new(16, 0u8);
+	let mut qt = QuadTree::new(10, 0u8);
 	for claim in input {
 		qt.map_and_merge(claim, |count| u8::min(count + 1, 2));
 	}
-	/*
-	let mut file = std::fs:File::create("tree.txt").unwrap();
-	write!(file, "{}", qt);
-	*/
 	qt.area_if(|count| *count == 2)
 }
 
 #[aoc(day3, part2)]
 pub fn part_2(input: &GeneratorOut) -> u32 {
-	let mut qt = QuadTree::new(16, 0u8);
+	let mut qt = QuadTree::new(10, 0u8);
 	for claim in input {
 		qt.map_and_merge(claim, |count| u8::min(count + 1, 2));
 	}
