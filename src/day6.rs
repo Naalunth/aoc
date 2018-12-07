@@ -3,7 +3,9 @@ type GeneratorOut = Vec<Point>;
 use std::ops::{Add, Sub};
 use std::collections::{HashSet, HashMap};
 use std::iter::repeat;
+
 use nom::types::CompleteStr;
+use rayon::prelude::*;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Point {
@@ -70,8 +72,8 @@ pub fn part_1(input: &GeneratorOut) -> u32 {
 		.take(y_size).collect::<Vec<_>>();
 	let offset = Point::new(x_min as i64, y_min as i64);
 
-	for (y, row) in cells.iter_mut().enumerate() {
-		for (x, cell) in row.iter_mut().enumerate() {
+	cells.par_iter_mut().enumerate().for_each(|(y, row)| {
+		row.par_iter_mut().enumerate().for_each(|(x, cell)|{
 			let cell_point = Point::new(x as i64, y as i64) + offset;
 			let mut current_min_point: Option<(Option<usize>, i64)> = None;
 			for (id, point) in input.iter().enumerate() {
@@ -85,8 +87,8 @@ pub fn part_1(input: &GeneratorOut) -> u32 {
 				}
 				*cell = current_min_point.unwrap().0;
 			}
-		}
-	}
+		});
+	});
 
 	let mut excluded_points = HashSet::new();
 
@@ -118,17 +120,22 @@ pub fn part_1(input: &GeneratorOut) -> u32 {
 		}
 	}
 
-	let counts = cells.iter()
-		.flat_map(|row| row.iter())
+	let counts = cells.par_iter()
+		.flat_map(|row| row.par_iter())
 		.filter_map(|cell| *cell)
 		.filter(|id| !excluded_points.contains(id))
-		.fold(HashMap::new(), |mut map, id| {
+		.fold(|| HashMap::new(), |mut map, id| {
 			*map.entry(id).or_insert(0u32) += 1;
 			map
+		})
+		.reduce(|| HashMap::new(), |mut a, b| {
+			for (k, v) in b.iter() {
+				*a.entry(*k).or_insert(0u32) += v;
+			}
+			a
 		});
 
-	counts.iter()
-		.map(|(_, count)| *count)
+	*counts.values()
 		.max()
 		.unwrap()
 }
@@ -144,8 +151,8 @@ pub fn part_2(input: &GeneratorOut) -> usize {
 	const MAX_DISTANCE: u64 = 10000;
 	let offset = Point::new(x_min as i64, y_min as i64);
 
-	(0..y_size).flat_map(|y| (0..x_size).zip(repeat(y)))
-		.map(|(x, y)| {
+	(0..y_size).into_par_iter().flat_map(|y| rayon::iter::repeat(y).zip((0..x_size).into_par_iter()))
+		.map(|(y, x)| {
 			let cell_point = Point::new(x as i64, y as i64) + offset;
 			input.iter().map(|point| point.l1_distance(&cell_point)).sum::<i64>()
 		})
