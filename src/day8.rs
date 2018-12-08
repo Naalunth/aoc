@@ -1,71 +1,50 @@
-type GeneratorOut = Node;
+type GeneratorOut = Vec<u32>;
 
 use smallvec::SmallVec;
-use nom::types::CompleteStr;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Node {
-	children: Vec<Node>,
-	meta: SmallVec<[u32; 8]>,
-}
-
-impl std::convert::AsRef<Node> for Node {
-	fn as_ref(&self) -> &Self {
-		self
-	}
-}
-
-named!(number <CompleteStr, u32>, map!(take_while1!(|c| char::is_ascii_digit(&c)), |s| s.parse::<u32>().unwrap()));
-
-named!(parse_input <CompleteStr, Vec<u32>>, do_parse!(
-	list: separated_list!(tag!(" "), number) >>
-	tag!("\n") >>
-	(list)
-));
-
-fn parse_node<'a, I>(input: &mut I) -> Node where
-	I: Iterator<Item = &'a u32>
-{
-	let node_count = *input.next().unwrap();
-	let meta_count = *input.next().unwrap();
-	let nodes = (0..node_count).map(|_| parse_node(input)).collect::<Vec<_>>();
-	let meta = (0..meta_count).map(|_| *input.next().unwrap()).collect::<SmallVec<_>>();
-	Node {
-		children: nodes,
-		meta
-	}
-}
 
 #[aoc_generator(day8)]
 pub fn generator(input: &str) -> GeneratorOut {
-	let list = parse_input(CompleteStr(input)).unwrap().1;
-	parse_node(&mut list.iter())
+	input.split_terminator(|c: char| c.is_ascii_whitespace())
+		.map(|s| s.parse::<u32>().unwrap())
+		.collect()
 }
 
 #[aoc(day8, part1)]
 pub fn part_1(input: &GeneratorOut) -> u32 {
-	fn walk_node(node: &Node) -> u32 {
-		node.children.iter()
-			.map(|n| walk_node(n))
-			.chain(node.meta.iter().cloned())
-			.sum()
-	}
-	walk_node(&input)
+	fn walk_node<'a, I: Iterator<Item = &'a u32>>(iter: &mut I) -> u32 {
+		let child_count = *iter.next().unwrap();
+		let meta_count = *iter.next().unwrap();
+		(0..child_count)
+			.map(|_| walk_node(iter))
+			.sum::<u32>() +
+		(0..meta_count)
+			.map(|_| *iter.next().unwrap())
+			.sum::<u32>()
+	};
+	walk_node(&mut input.iter())
 }
 
 #[aoc(day8, part2)]
 pub fn part_2(input: &GeneratorOut) -> u32 {
-	fn walk_node(node: &Node) -> u32 {
-		if node.children.is_empty() {
-			node.meta.iter().cloned().sum()
-		} else {
-			node.meta.iter()
-				.filter_map(|meta| if *meta == 0 {None} else {Some(*meta-1)})
+	fn walk_node<'a, I: Iterator<Item = &'a u32>>(iter: &mut I) -> u32 {
+		let child_count = *iter.next().unwrap();
+		let meta_count = *iter.next().unwrap();
+		if child_count != 0 {
+			let children = (0..child_count)
+				.map(|_| walk_node(iter))
+				.collect::<SmallVec<[u32; 128]>>();
+			(0..meta_count)
+				.map(|_| *iter.next().unwrap())
+				.filter_map(|meta| if meta == 0 {None} else {Some(meta-1)})
 				.filter_map(|meta| {
-					node.children.get(meta as usize).map(|c| walk_node(c))
+					children.get(meta as usize)
 				})
-				.sum()
+				.sum::<u32>()
+		} else {
+			(0..meta_count)
+				.map(|_| *iter.next().unwrap())
+				.sum::<u32>()
 		}
-	}
-	walk_node(&input)
+	};
+	walk_node(&mut input.iter())
 }
