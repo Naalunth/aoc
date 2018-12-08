@@ -113,8 +113,8 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 	let (mut nodes, mut dependency_less_nodes) = generate_topo_sort_components(&input);
 
 	fn cost(node: &Node) -> u32 {
-		const OFFSET: u32 = u32::max_value() - (b'A' as u32) + 61 + 1;
-		(*node as u32).wrapping_add(OFFSET)
+		const OFFSET: u8 = u8::max_value() - (b'A' as u8) + 61 + 1;
+		(*node).wrapping_add(OFFSET) as u32
 	}
 
 	let mut time = 0u32;
@@ -136,7 +136,7 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 				if new_job_found && worker.time > time {
 					break;
 				}
-				time = u32::max(time, worker.time);
+				time = worker.time;
 				let job = worker.job.unwrap();
 				for outgoing in nodes.remove(&job).unwrap()
 					.outgoing.into_iter()
