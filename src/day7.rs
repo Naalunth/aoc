@@ -1,13 +1,17 @@
 type GeneratorOut = Vec<Edge>;
 
-use std::collections::{HashSet, HashMap, BinaryHeap};
+use std::collections::{HashMap, BinaryHeap};
 use std::cmp::Ordering;
 use nom::types::CompleteStr;
+use smallvec::SmallVec;
+use partition::partition;
+
+type Node = u8;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Edge {
-	from: u8,
-	to: u8
+	from: Node,
+	to: Node
 }
 
 named!(letter <CompleteStr, u8>, map!(take_while_m_n!(1, 1, |c: char| c.is_ascii_alphabetic()), |s| s.bytes().next().unwrap()));
@@ -28,30 +32,24 @@ pub fn generator(input: &str) -> GeneratorOut {
 
 #[derive(Debug)]
 struct NodeInfo {
-	pub incoming: HashSet<u8>,
-	pub outgoing: Vec<u8>,
+	/// Count of incoming edges not yet removed
+	pub incoming_count: u32,
+	/// Nodes, that this node has edges going to
+	pub outgoing: SmallVec<[Node; 6]>,
 }
 
 impl NodeInfo {
 	fn new() -> Self {
 		NodeInfo {
-			incoming: HashSet::new(),
-			outgoing: Vec::new(),
+			incoming_count: 0,
+			outgoing: SmallVec::new(),
 		}
 	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 struct HeapElement {
-	pub node: u8
-}
-
-impl Eq for HeapElement {}
-
-impl PartialEq for HeapElement {
-	fn eq(&self, other: &HeapElement) -> bool {
-		self.node == other.node
-	}
+	pub node: Node
 }
 
 impl Ord for HeapElement {
@@ -66,27 +64,23 @@ impl PartialOrd for HeapElement {
 	}
 }
 
-fn generate_topo_sort_components(graph: &[Edge]) -> (HashMap<u8, NodeInfo>, BinaryHeap<HeapElement>) {
-	let mut nodes: HashMap<u8, NodeInfo> = HashMap::with_capacity(graph.len());
+fn generate_topo_sort_components(graph: &[Edge]) -> (HashMap<Node, NodeInfo>, BinaryHeap<HeapElement>) {
+	let mut nodes: HashMap<Node, NodeInfo> = HashMap::with_capacity(200);
 
-	let dependency_less_nodes: BinaryHeap<HeapElement> = {
-		let mut top_level_nodes: HashSet<u8> = HashSet::new();
+	for edge in graph {
+		nodes.entry(edge.from)
+			.or_insert_with(|| NodeInfo::new())
+			.outgoing.push(edge.to);
+		nodes.entry(edge.to)
+			.or_insert_with(|| NodeInfo::new())
+			.incoming_count += 1;
+	}
 
-		for edge in graph {
-			if !nodes.contains_key(&edge.from) {
-				top_level_nodes.insert(edge.from);
-			}
-			top_level_nodes.remove(&edge.to);
-			nodes.entry(edge.from)
-				.or_insert_with(|| NodeInfo::new())
-				.outgoing.push(edge.to);
-			nodes.entry(edge.to)
-				.or_insert_with(|| NodeInfo::new())
-				.incoming.insert(edge.from);
-		}
-
-		top_level_nodes.into_iter().map(|node| HeapElement{node}).collect()
-	};
+	let dependency_less_nodes = nodes.iter()
+		.filter(|&(_, info)| info.incoming_count == 0)
+		.map(|(&node, _)| HeapElement {node})
+		.collect::<Vec<_>>()
+		.into();
 
 	(nodes, dependency_less_nodes)
 }
@@ -95,7 +89,7 @@ fn generate_topo_sort_components(graph: &[Edge]) -> (HashMap<u8, NodeInfo>, Bina
 pub fn part_1(input: &GeneratorOut) -> String {
 	let (mut nodes, mut dependency_less_nodes) = generate_topo_sort_components(&input);
 
-	let mut output_buffer: Vec<u8> = Vec::with_capacity(input.len());
+	let mut output_buffer: Vec<Node> = Vec::with_capacity(nodes.len());
 
 	while let Some(HeapElement { node: current_node }) = dependency_less_nodes.pop() {
 		output_buffer.push(current_node);
@@ -104,8 +98,8 @@ pub fn part_1(input: &GeneratorOut) -> String {
 			.outgoing.into_iter()
 		{
 			let mut out_ref = nodes.get_mut(&outgoing).unwrap();
-			out_ref.incoming.remove(&current_node);
-			if out_ref.incoming.is_empty() {
+			out_ref.incoming_count -= 1;
+			if out_ref.incoming_count == 0 {
 				dependency_less_nodes.push(HeapElement { node: outgoing });
 			}
 		}
@@ -118,8 +112,9 @@ pub fn part_1(input: &GeneratorOut) -> String {
 pub fn part_2(input: &GeneratorOut) -> u32 {
 	let (mut nodes, mut dependency_less_nodes) = generate_topo_sort_components(&input);
 
-	fn cost(node: &u8) -> u32 {
-		61 + *node as u32 - b'A' as u32
+	fn cost(node: &Node) -> u32 {
+		const OFFSET: u32 = u32::max_value() - (b'A' as u32) + 61 + 1;
+		(*node as u32).wrapping_add(OFFSET)
 	}
 
 	let mut time = 0u32;
@@ -127,35 +122,41 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 	#[derive(Copy, Clone)]
 	struct Worker {
 		time: u32,
-		job: Option<u8>,
+		job: Option<Node>,
 	}
 	let mut workers = [Worker{time: 0, job: None}; 5];
 
 	while !nodes.is_empty() {
-		workers.sort_unstable_by_key(|&w| w.time);
 		let mut new_job_found = false;
-		for worker in workers.iter() {
-			if new_job_found && worker.time > time { break; }
-			time = u32::max(time, worker.time);
-			if let Some(job) = worker.job {
+		let inactive_worker_count = {
+			let (inactive, active) = partition(&mut workers, |&w| w.job.is_none());
+			let mut inactive_worker_count = inactive.len();
+			active.sort_unstable_by_key(|&w| w.time);
+			for worker in active.iter() {
+				if new_job_found && worker.time > time {
+					break;
+				}
+				time = u32::max(time, worker.time);
+				let job = worker.job.unwrap();
 				for outgoing in nodes.remove(&job).unwrap()
 					.outgoing.into_iter()
 				{
 					let mut out_ref = nodes.get_mut(&outgoing).unwrap();
-					out_ref.incoming.remove(&job);
-					if out_ref.incoming.is_empty() {
+					out_ref.incoming_count -= 1;
+					if out_ref.incoming_count == 0 {
 						new_job_found = true;
 						dependency_less_nodes.push(HeapElement { node: outgoing });
 					}
 				}
+				inactive_worker_count += 1;
 			}
-		}
-		for worker in workers.iter_mut() {
-			if worker.time > time { break; }
+			inactive_worker_count
+		};
+
+		for worker in workers[..inactive_worker_count].iter_mut().rev() {
 			if let Some(HeapElement { node: current_node }) = dependency_less_nodes.pop() {
 				worker.job = Some(current_node);
 				worker.time = time + cost(&current_node);
-				continue;
 			} else {
 				worker.job = None;
 			}

@@ -9,6 +9,7 @@ extern crate nom;
 extern crate proptest;
 extern crate chrono;
 extern crate rayon;
+extern crate partition;
 
 pub mod day1;
 pub mod day2;
