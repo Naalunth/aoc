@@ -2,6 +2,7 @@
 name = "aoc-2018"
 version = "0.1.0"
 authors = ["Naalunth <kevin-schier@web.de>"]
+edition = "2018"
 
 [lib]
 bench = false
