@@ -1,11 +1,12 @@
 type GeneratorOut = Node;
 
+use smallvec::SmallVec;
 use nom::types::CompleteStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Node {
 	children: Vec<Node>,
-	meta: Vec<u32>,
+	meta: SmallVec<[u32; 8]>,
 }
 
 impl std::convert::AsRef<Node> for Node {
@@ -28,7 +29,7 @@ fn parse_node<'a, I>(input: &mut I) -> Node where
 	let node_count = *input.next().unwrap();
 	let meta_count = *input.next().unwrap();
 	let nodes = (0..node_count).map(|_| parse_node(input)).collect::<Vec<_>>();
-	let meta = (0..meta_count).map(|_| *input.next().unwrap()).collect::<Vec<_>>();
+	let meta = (0..meta_count).map(|_| *input.next().unwrap()).collect::<SmallVec<_>>();
 	Node {
 		children: nodes,
 		meta
