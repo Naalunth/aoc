@@ -1,4 +1,3 @@
-extern crate aoc_2018;
 #[macro_use]
 extern crate criterion;
 
@@ -11,8 +10,8 @@ fn criterion_benchmark(c: &mut Criterion) {
 		let mut input = Rc::new(String::new());
 		file.read_to_string(Rc::get_mut(&mut input).unwrap())
 			.unwrap();
-		c.bench_function("day08/generator", move |b| {
-			b.iter(|| aoc_2018::day8::generator(&input))
+		c.bench_function("year2018/day08/generator", move |b| {
+			b.iter(|| aoc_naalunth::year2018::day08::generator(&input))
 		});
 	}
 }
