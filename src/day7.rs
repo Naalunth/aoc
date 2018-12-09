@@ -122,14 +122,14 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 	#[derive(Copy, Clone)]
 	struct Worker {
 		time: u32,
-		job: Option<Node>,
+		job: Node,
 	}
-	let mut workers = [Worker{time: 0, job: None}; 5];
+	let mut workers = [Worker{time: 0, job: 0}; 5];
 
 	while !nodes.is_empty() {
 		let mut new_job_found = false;
 		let inactive_worker_count = {
-			let (inactive, active) = partition(&mut workers, |&w| w.job.is_none());
+			let (inactive, active) = partition(&mut workers, |&w| w.time <= time);
 			let mut inactive_worker_count = inactive.len();
 			active.sort_unstable_by_key(|&w| w.time);
 			for worker in active.iter() {
@@ -137,8 +137,7 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 					break;
 				}
 				time = worker.time;
-				let job = worker.job.unwrap();
-				for outgoing in nodes.remove(&job).unwrap()
+				for outgoing in nodes.remove(&worker.job).unwrap()
 					.outgoing.into_iter()
 				{
 					let mut out_ref = nodes.get_mut(&outgoing).unwrap();
@@ -155,10 +154,10 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 
 		for worker in workers[..inactive_worker_count].iter_mut().rev() {
 			if let Some(HeapElement { node: current_node }) = dependency_less_nodes.pop() {
-				worker.job = Some(current_node);
+				worker.job = current_node;
 				worker.time = time + cost(&current_node);
 			} else {
-				worker.job = None;
+				break;
 			}
 		}
 	}
