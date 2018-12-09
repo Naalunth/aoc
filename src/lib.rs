@@ -16,4 +16,4 @@ pub mod day7;
 pub mod day8;
 pub mod day9;
 
-aoc_lib!{ year = 2018 }
+aoc_lib! { year = 2018 }

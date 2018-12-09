@@ -10,11 +10,14 @@ fn opposite_units(a: u8, b: u8) -> bool {
 
 fn collapse_length<'a, I>(polymer: I) -> usize
 where
-	I: Iterator<Item = &'a u8>
+	I: Iterator<Item = &'a u8>,
 {
 	let mut stack = Vec::new();
 	for unit in polymer {
-		if stack.last().map_or(false, |last| opposite_units(*last, *unit)) {
+		if stack
+			.last()
+			.map_or(false, |last| opposite_units(*last, *unit))
+		{
 			stack.pop();
 		} else {
 			stack.push(*unit);
@@ -25,14 +28,19 @@ where
 
 #[aoc(day5, part1)]
 pub fn part_1(input: &[u8]) -> usize {
-	let trimmed = &input[0..input.len()-1];
+	let trimmed = &input[0..input.len() - 1];
 	collapse_length(trimmed.iter())
 }
 
 #[aoc(day5, part2)]
 pub fn part_2(input: &[u8]) -> usize {
-	let trimmed = &input[0..input.len()-1];
-	(b'A'..(b'Z'+1)).into_par_iter()
-		.map(|deletion| collapse_length(trimmed.iter().filter(|u| u.eq_ignore_ascii_case(&deletion))))
-		.min().unwrap()
+	let trimmed = &input[0..input.len() - 1];
+	#[allow(clippy::range_plus_one)]
+	(b'A'..(b'Z' + 1))
+		.into_par_iter()
+		.map(|deletion| {
+			collapse_length(trimmed.iter().filter(|u| u.eq_ignore_ascii_case(&deletion)))
+		})
+		.min()
+		.unwrap()
 }

@@ -1,20 +1,23 @@
 type GeneratorOut = Vec<Edge>;
+type PartIn = [Edge];
 
-use std::collections::{HashMap, BinaryHeap};
-use std::cmp::Ordering;
 use nom::types::CompleteStr;
-use smallvec::SmallVec;
 use partition::partition;
+use smallvec::SmallVec;
+use std::{
+	cmp::Ordering,
+	collections::{BinaryHeap, HashMap},
+};
 
 type Node = u8;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Edge {
 	from: Node,
-	to: Node
+	to: Node,
 }
 
-named!(letter <CompleteStr, u8>, map!(take_while_m_n!(1, 1, |c: char| c.is_ascii_alphabetic()), |s| s.bytes().next().unwrap()));
+named!(letter <CompleteStr, u8>, map!(take!(1), |s| s.bytes().next().unwrap()));
 
 named!(parse_line <CompleteStr, Edge>, do_parse!(
 	tag!("Step ") >>
@@ -27,7 +30,10 @@ named!(parse_line <CompleteStr, Edge>, do_parse!(
 
 #[aoc_generator(day7)]
 pub fn generator(input: &str) -> GeneratorOut {
-	input.lines().map(|l| parse_line(CompleteStr(l)).unwrap().1).collect::<Vec<_>>()
+	input
+		.lines()
+		.map(|l| parse_line(CompleteStr(l)).unwrap().1)
+		.collect::<Vec<_>>()
 }
 
 #[derive(Debug)]
@@ -49,7 +55,7 @@ impl NodeInfo {
 
 #[derive(Debug, Eq, PartialEq)]
 struct HeapElement {
-	pub node: Node
+	pub node: Node,
 }
 
 impl Ord for HeapElement {
@@ -64,21 +70,27 @@ impl PartialOrd for HeapElement {
 	}
 }
 
-fn generate_topo_sort_components(graph: &[Edge]) -> (HashMap<Node, NodeInfo>, BinaryHeap<HeapElement>) {
+fn generate_topo_sort_components(
+	graph: &[Edge],
+) -> (HashMap<Node, NodeInfo>, BinaryHeap<HeapElement>) {
 	let mut nodes: HashMap<Node, NodeInfo> = HashMap::with_capacity(200);
 
 	for edge in graph {
-		nodes.entry(edge.from)
-			.or_insert_with(|| NodeInfo::new())
-			.outgoing.push(edge.to);
-		nodes.entry(edge.to)
-			.or_insert_with(|| NodeInfo::new())
+		nodes
+			.entry(edge.from)
+			.or_insert_with(NodeInfo::new)
+			.outgoing
+			.push(edge.to);
+		nodes
+			.entry(edge.to)
+			.or_insert_with(NodeInfo::new)
 			.incoming_count += 1;
 	}
 
-	let dependency_less_nodes = nodes.iter()
+	let dependency_less_nodes = nodes
+		.iter()
 		.filter(|&(_, info)| info.incoming_count == 0)
-		.map(|(&node, _)| HeapElement {node})
+		.map(|(&node, _)| HeapElement { node })
 		.collect::<Vec<_>>()
 		.into();
 
@@ -86,7 +98,7 @@ fn generate_topo_sort_components(graph: &[Edge]) -> (HashMap<Node, NodeInfo>, Bi
 }
 
 #[aoc(day7, part1)]
-pub fn part_1(input: &GeneratorOut) -> String {
+pub fn part_1(input: &PartIn) -> String {
 	let (mut nodes, mut dependency_less_nodes) = generate_topo_sort_components(&input);
 
 	let mut output_buffer: Vec<Node> = Vec::with_capacity(nodes.len());
@@ -94,9 +106,7 @@ pub fn part_1(input: &GeneratorOut) -> String {
 	while let Some(HeapElement { node: current_node }) = dependency_less_nodes.pop() {
 		output_buffer.push(current_node);
 
-		for outgoing in nodes.remove(&current_node).unwrap()
-			.outgoing.into_iter()
-		{
+		for outgoing in nodes.remove(&current_node).unwrap().outgoing.into_iter() {
 			let mut out_ref = nodes.get_mut(&outgoing).unwrap();
 			out_ref.incoming_count -= 1;
 			if out_ref.incoming_count == 0 {
@@ -109,12 +119,12 @@ pub fn part_1(input: &GeneratorOut) -> String {
 }
 
 #[aoc(day7, part2)]
-pub fn part_2(input: &GeneratorOut) -> u32 {
+pub fn part_2(input: &PartIn) -> u32 {
 	let (mut nodes, mut dependency_less_nodes) = generate_topo_sort_components(&input);
 
 	fn cost(node: &Node) -> u32 {
-		const OFFSET: u8 = u8::max_value() - (b'A' as u8) + 61 + 1;
-		(*node).wrapping_add(OFFSET) as u32
+		const OFFSET: u8 = u8::max_value() - b'A' + 61 + 1;
+		(*node).wrapping_add(OFFSET).into()
 	}
 
 	let mut time = 0u32;
@@ -124,7 +134,7 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 		time: u32,
 		job: Node,
 	}
-	let mut workers = [Worker{time: 0, job: 0}; 5];
+	let mut workers = [Worker { time: 0, job: 0 }; 5];
 
 	while !nodes.is_empty() {
 		let mut new_job_found = false;
@@ -137,9 +147,7 @@ pub fn part_2(input: &GeneratorOut) -> u32 {
 					break;
 				}
 				time = worker.time;
-				for outgoing in nodes.remove(&worker.job).unwrap()
-					.outgoing.into_iter()
-				{
+				for outgoing in nodes.remove(&worker.job).unwrap().outgoing.into_iter() {
 					let mut out_ref = nodes.get_mut(&outgoing).unwrap();
 					out_ref.incoming_count -= 1;
 					if out_ref.incoming_count == 0 {
