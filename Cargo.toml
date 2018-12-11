@@ -15,12 +15,16 @@ aoc-runner = "0.2.0"
 aoc-runner-derive = "0.2.0"
 smallvec = "0.6.7"
 chrono = "0.4.6"
-rayon = "1.0.3"
-partition = "0.1.1"
+rayon = "1.0.0"
+partition = "0.1.0"
+nalgebra = "0.16.0"
 
 [dependencies.nom]
-version = "4.1.1"
-features = []
+version = "4.1.0"
+
+[dependencies.ndarray]
+git = "https://github.com/rust-ndarray/ndarray"
+features = ["rayon"]
 
 [dev-dependencies]
 proptest = "0.8.7"
