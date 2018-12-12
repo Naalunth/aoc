@@ -25,3 +25,4 @@ These benchmarks were run on a Ryzen 7 1700X.
 |   9 | 482.00 µs |    ~58 ms |                                                                                                                    |
 |  10 | 7.8872 ms | 6.0207 ms |                                                                                                                    |
 |  11 | 1.0303 ms | 5.3645 ms |                                                                                                                    |
+|  12 | 29.654 µs | 155.79 µs |                                                                                                                    |
