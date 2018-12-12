@@ -1,9 +1,9 @@
 type GeneratorOut = Input;
 type PartIn = GeneratorOut;
 
-use std::convert::AsRef;
-use nom::types::CompleteStr;
 use itertools::multipeek;
+use nom::types::CompleteStr;
+use std::convert::AsRef;
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -25,7 +25,9 @@ pub struct Input {
 }
 
 impl AsRef<Input> for Input {
-	fn as_ref(&self) -> &Input { self }
+	fn as_ref(&self) -> &Input {
+		self
+	}
 }
 
 named!(parse_state <CompleteStr, State>, alt!(
@@ -56,7 +58,9 @@ pub fn generator(input: &str) -> GeneratorOut {
 }
 
 fn rule_lut(rules: &[Rule]) -> Vec<State> {
-	let mut lut = std::iter::repeat(State::Dead).take(1 << 5).collect::<Vec<_>>();
+	let mut lut = std::iter::repeat(State::Dead)
+		.take(1 << 5)
+		.collect::<Vec<_>>();
 	for rule in rules {
 		let mut index = 0usize;
 		for cell in rule.pattern.iter().rev() {
@@ -93,7 +97,7 @@ fn simulate_generation(lut: &[State], last: &[i64], current: &mut Vec<i64>) {
 			last_iter.reset_peek();
 		}
 
-		if last_iter.peek() == Some(&&(x+2)) || last_iter.peek() == Some(&&(x+2)) {
+		if last_iter.peek() == Some(&&(x + 2)) || last_iter.peek() == Some(&&(x + 2)) {
 			neighborhood |= 1u8 << 4;
 		}
 		last_iter.reset_peek();
@@ -104,10 +108,12 @@ fn simulate_generation(lut: &[State], last: &[i64], current: &mut Vec<i64>) {
 
 		x += 1;
 		neighborhood = neighborhood.overflowing_shr(1).0;
-		if {
+
+		let advance_iter = {
 			let next = last_iter.peek();
 			next.is_some() && **next.unwrap() <= x
-		} {
+		};
+		if advance_iter {
 			last_iter.next();
 		}
 		last_iter.reset_peek();
@@ -131,9 +137,7 @@ fn is_same_shifted(last: &[i64], current: &[i64]) -> bool {
 	if last.len() != current.len() {
 		return false;
 	}
-	last.iter()
-		.zip(current.iter())
-		.all(|(a, b)| *a + 1 == *b)
+	last.iter().zip(current.iter()).all(|(a, b)| *a + 1 == *b)
 }
 
 #[aoc(day12, part2)]
@@ -151,5 +155,5 @@ pub fn part_2(input: &PartIn) -> i64 {
 		std::mem::swap(&mut last, &mut current);
 		current.clear();
 	}
-	last.iter().sum::<i64>() + last.len() as i64 * (50000000000i64 - generation)
+	last.iter().sum::<i64>() + last.len() as i64 * (50_000_000_000i64 - generation)
 }
