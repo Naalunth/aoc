@@ -1,2 +1,7 @@
 [build]
+
+[target.x86_64-pc-windows-msvc]
 rustflags = ["-C", "target-cpu=native"]
+
+[target.armv7-unknown-linux-gnueabihf]
+linker = "arm-linux-gnueabihf-gcc"

@@ -11,17 +11,15 @@ bench = false
 panic = "abort"
 
 [dependencies]
-aoc-runner = "0.2.0"
-aoc-runner-derive = "0.2.0"
+aoc-runner = "0.2.2"
+aoc-runner-derive = "0.2.1"
 smallvec = "0.6.7"
 chrono = "0.4.6"
-rayon = "1.0.0"
-partition = "0.1.0"
-nalgebra = "0.16.0"
+rayon = "1.0.3"
+partition = "0.1.1"
+nalgebra = "0.16.12"
 itertools = "0.8.0"
-
-[dependencies.nom]
-version = "4.1.0"
+nom = "4.1.1"
 
 [dependencies.ndarray]
 git = "https://github.com/rust-ndarray/ndarray"
