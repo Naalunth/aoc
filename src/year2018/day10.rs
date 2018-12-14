@@ -1,6 +1,7 @@
 type GeneratorOut = Vec<Light>;
 type PartIn = [Light];
 
+use std::collections::HashMap;
 use nalgebra::{Point2, Vector2};
 use nom::types::CompleteStr;
 
@@ -67,10 +68,11 @@ fn area(points: &[Point2<i64>]) -> u64 {
 }
 
 fn format_grid(points: &[Point2<i64>]) -> String {
+	use itertools::Itertools;
 	let (_x_max, x_min, _y_max, y_min) = extent(points);
 	let (x_size, y_size) = size(points);
 	let mut strings = std::iter::repeat_with(|| {
-		std::iter::repeat(b'.')
+		std::iter::repeat(b' ')
 			.take(x_size as usize)
 			.collect::<Vec<_>>()
 	})
@@ -81,7 +83,28 @@ fn format_grid(points: &[Point2<i64>]) -> String {
 		let array_pos = point - offset;
 		strings[array_pos.y as usize][array_pos.x as usize] = b'#';
 	}
-	String::from_utf8(strings.join(&b'\n')).unwrap()
+	let letter_map = {
+		let letter_file = include_str!("day10/letters.txt");
+		let mut iter = letter_file.split(".\n");
+		let small_letters = iter.next().unwrap();
+		small_letters.chars()
+			.zip(iter)
+			.map(|(small, big)| (big.to_owned(), small.to_owned()))
+			.collect::<HashMap<_, _>>()
+	};
+	let mut letter_offset = 0;
+	let mut constellation = String::new();
+	loop {
+		if letter_offset + 6 >= strings[0].len() {
+			break;
+		}
+		let big_letter = strings.iter()
+			.map(|s| std::str::from_utf8(&s[letter_offset..letter_offset + 6]).unwrap())
+			.join("\n");
+		constellation.push(letter_map[&big_letter]);
+		letter_offset += 8;
+	}
+	constellation
 }
 
 #[aoc(day10, part1)]
@@ -100,7 +123,7 @@ pub fn part_1(input: &PartIn) -> String {
 		min_area = area;
 		min_positions = current_positions.clone();
 	}
-	format!("\n{}", format_grid(&min_positions))
+	format_grid(&min_positions)
 }
 
 #[aoc(day10, part2)]
