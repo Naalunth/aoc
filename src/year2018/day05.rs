@@ -28,18 +28,16 @@ where
 
 #[aoc(day5, part1)]
 pub fn part_1(input: &[u8]) -> usize {
-	let trimmed = &input[0..input.len() - 1];
-	collapse_length(trimmed.iter())
+	collapse_length(input.iter())
 }
 
 #[aoc(day5, part2)]
 pub fn part_2(input: &[u8]) -> usize {
-	let trimmed = &input[0..input.len() - 1];
 	#[allow(clippy::range_plus_one)]
 	(b'A'..(b'Z' + 1))
 		.into_par_iter()
 		.map(|deletion| {
-			collapse_length(trimmed.iter().filter(|u| u.eq_ignore_ascii_case(&deletion)))
+			collapse_length(input.iter().filter(|u| !u.eq_ignore_ascii_case(&deletion)))
 		})
 		.min()
 		.unwrap()

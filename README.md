@@ -18,7 +18,7 @@ These benchmarks were run on a Ryzen 7 1700X.
 |   2 | 368.29 µs | 64.995 µs | Part 2 uses an inconsistent optimization by sorting the lines of IDs before comparison                             |
 |   3 | 8.9421 ms | 8.0919 ms | Areas are stored in a quadtree                                                                                     |
 |   4 | 95.937 µs | 96.591 µs |                                                                                                                    |
-|   5 | 369.81 µs | 213.95 µs | Part 2 uses parallelization with rayon (don't ask why it's faster then part 1)                                     |
+|   5 | 369.81 µs | 1.0087 ms |                                                                                                                    |
 |   6 | 3.6438 ms | 856.39 µs | Too lazy to actually implement a proper Delaunay triangulation, so this one just got brute forced and parallelized |
 |   7 | 11.206 µs | 11.372 µs | Topological sort with Kahn's algorithm                                                                             |
 |   8 | 22.227 µs | 78.360 µs |                                                                                                                    |
