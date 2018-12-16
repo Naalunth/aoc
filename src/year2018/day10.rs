@@ -1,9 +1,9 @@
 type GeneratorOut = Vec<Light>;
 type PartIn = [Light];
 
-use std::collections::HashMap;
 use nalgebra::{Point2, Vector2};
 use nom::types::CompleteStr;
+use std::collections::HashMap;
 
 #[derive(Copy, Clone)]
 pub struct Light {
@@ -87,7 +87,8 @@ fn format_grid(points: &[Point2<i64>]) -> String {
 		let letter_file = include_str!("day10/letters.txt");
 		let mut iter = letter_file.split(".\n");
 		let small_letters = iter.next().unwrap();
-		small_letters.chars()
+		small_letters
+			.chars()
 			.zip(iter)
 			.map(|(small, big)| (big.to_owned(), small.to_owned()))
 			.collect::<HashMap<_, _>>()
@@ -98,7 +99,8 @@ fn format_grid(points: &[Point2<i64>]) -> String {
 		if letter_offset + 6 >= strings[0].len() {
 			break;
 		}
-		let big_letter = strings.iter()
+		let big_letter = strings
+			.iter()
 			.map(|s| std::str::from_utf8(&s[letter_offset..letter_offset + 6]).unwrap())
 			.join("\n");
 		constellation.push(letter_map[&big_letter]);

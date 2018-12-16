@@ -9,6 +9,7 @@ bench = false
 
 [profile.release]
 panic = "abort"
+debug = true
 
 [dependencies]
 aoc-runner = "0.2.2"
@@ -20,6 +21,10 @@ partition = "0.1.1"
 nalgebra = "0.16.12"
 itertools = "0.8.0"
 nom = "4.1.1"
+specs = "0.14.1"
+specs-derive = "0.3.0"
+indexmap = "1.0.2"
+hashers = "1.0.1"
 
 [dependencies.ndarray]
 git = "https://github.com/rust-ndarray/ndarray"

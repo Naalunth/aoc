@@ -5,6 +5,8 @@ extern crate nom;
 #[cfg(test)]
 #[macro_use]
 extern crate proptest;
+#[macro_use]
+extern crate specs_derive;
 
 pub mod year2018 {
 	pub mod day01;
@@ -21,6 +23,7 @@ pub mod year2018 {
 	pub mod day12;
 	pub mod day13;
 	pub mod day14;
+	pub mod day15;
 }
 
 aoc_lib! { year = 2018 }
